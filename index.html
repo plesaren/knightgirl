@@ -1,30 +1,34 @@
-import zipfile
-import os
-
-# สร้าง zip file ที่รวม index.html และภาพทั้งหมด
-zip_path = "/mnt/data/เกมลากภาพ.zip"
-index_html_content = """
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <title>เกมลากชิ้นส่วนภาพ</title>
   <style>
-    body {
-      background: #f0f0f0;
-      text-align: center;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
       font-family: sans-serif;
+      background: #f0f0f0;
     }
 
     h1 {
-      margin-top: 20px;
+      margin: 20px 0 10px;
+      text-align: center;
+    }
+
+    p {
+      text-align: center;
+      margin-bottom: 10px;
     }
 
     #game-container {
-      width: 1000px;
-      height: 700px;
+      width: 90vw;
+      height: 70vh;
+      max-width: 1000px;
+      max-height: 700px;
       border: 2px dashed #aaa;
-      margin: 20px auto;
+      margin: 0 auto;
       position: relative;
       background: white;
       overflow: hidden;
@@ -39,24 +43,29 @@ index_html_content = """
     .piece:active {
       cursor: grabbing;
     }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.2em; }
+      #game-container { width: 95vw; height: 60vh; }
+    }
   </style>
 </head>
 <body>
 
-<h1>🧩 เกมลากภาพ - ขนาดจริง</h1>
+<h1>🧩 เกมลากชิ้นส่วน - ขนาดจริง</h1>
 <p>ลากภาพแต่ละชิ้นไปประกอบเป็นภาพใหม่</p>
 
 <div id="game-container"></div>
 
 <script>
   const images = [
-    "1-สามเหลี่ยมใหญ่-เหลือง.png",
-    "2-สามเหลี่ยมใหญ่-แดง.png",
-    "3-สามเหลี่ยมกลาง-ม่วง.png",
-    "4-สามเหลี่ยมเล็ก-ฟ้า.png",
-    "5-สามเหลี่ยมเล็ก-ชมพู.png",
-    "6-สี่เหลี่ยมขนมเปียกปูน-ส้ม.png",
-    "7-สี่เหลี่ยมข้าวหลามตัด-เขียว.png"
+    "1-yellow-big-triangle.png",
+    "2-red-big-triangle.png",
+    "3-purple-medium-triangle.png",
+    "4-blue-small-triangle.png",
+    "5-pink-small-triangle.png",
+    "6-orange-parallelogram.png",
+    "7-green-diamond.png"
   ];
 
   const container = document.getElementById('game-container');
@@ -80,50 +89,40 @@ index_html_content = """
   function makeDraggable(el) {
     let offsetX = 0, offsetY = 0;
 
-    el.onmousedown = function(e) {
-      offsetX = e.offsetX;
-      offsetY = e.offsetY;
+    el.onmousedown = startDrag;
+    el.ontouchstart = startDrag;
 
-      document.onmousemove = function(e) {
-        const x = e.pageX - container.offsetLeft - offsetX;
-        const y = e.pageY - container.offsetTop - offsetY;
+    function startDrag(e) {
+      e.preventDefault();
+      const isTouch = e.type === 'touchstart';
+      const startX = isTouch ? e.touches[0].clientX : e.clientX;
+      const startY = isTouch ? e.touches[0].clientY : e.clientY;
+      const rect = el.getBoundingClientRect();
+      offsetX = startX - rect.left;
+      offsetY = startY - rect.top;
 
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
-      };
+      document.onmousemove = document.ontouchmove = drag;
+      document.onmouseup = document.ontouchend = endDrag;
+    }
 
-      document.onmouseup = function() {
-        document.onmousemove = null;
-        document.onmouseup = null;
-      };
-    };
+    function drag(e) {
+      const isTouch = e.type === 'touchmove';
+      const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+      const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+      const x = clientX - container.getBoundingClientRect().left - offsetX;
+      const y = clientY - container.getBoundingClientRect().top - offsetY;
+
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+    }
+
+    function endDrag() {
+      document.onmousemove = document.ontouchmove = null;
+      document.onmouseup = document.ontouchend = null;
+    }
   }
 </script>
 
 </body>
 </html>
-"""
-
-# เขียน index.html ชั่วคราว
-index_html_path = "/mnt/data/index.html"
-with open(index_html_path, "w", encoding="utf-8") as f:
-    f.write(index_html_content)
-
-# สร้าง zip
-with zipfile.ZipFile(zip_path, "w") as zipf:
-    # เพิ่ม index.html
-    zipf.write(index_html_path, arcname="index.html")
-    # เพิ่มภาพทั้งหมด
-    image_filenames = [
-        "1-สามเหลี่ยมใหญ่-เหลือง.png",
-        "2-สามเหลี่ยมใหญ่-แดง.png",
-        "3-สามเหลี่ยมกลาง-ม่วง.png",
-        "4-สามเหลี่ยมเล็ก-ฟ้า.png",
-        "5-สามเหลี่ยมเล็ก-ชมพู.png",
-        "6-สี่เหลี่ยมขนมเปียกปูน-ส้ม.png",
-        "7-สี่เหลี่ยมข้าวหลามตัด-เขียว.png"
-    ]
-    for filename in image_filenames:
-        zipf.write(os.path.join("/mnt/data", filename), arcname=filename)
-
-zip_path
