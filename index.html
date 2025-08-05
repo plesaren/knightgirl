@@ -1,190 +1,197 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-  <meta charset="utf-8">
-  <title>เกมลากภาพ - ปุ่มทำงานแน่นอน</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>เกมลากชิ้นส่วนภาพ</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: sans-serif; background: #f0f0f0;
     }
-    canvas {
-      border: 1px solid gray;
-      touch-action: none;
+    h1 { margin: 20px 0 10px; text-align: center; }
+    p { text-align: center; margin-bottom: 10px; }
+    #game-container {
+      width: 100vw; height: 100vh;
+      border: 2px dashed #aaa; margin: 0 auto;
+      position: relative; background: white;
+      overflow: hidden; touch-action: none;
     }
-    .toolbar {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: white;
-      padding: 5px;
-      border-radius: 5px;
-      z-index: 999;
+    .piece {
+      position: absolute; cursor: grab; user-select: none;
+      touch-action: none; max-width: 100%; height: auto;
+      transform-origin: center center;
     }
-    button {
-      margin: 2px;
+    .piece:active { cursor: grabbing; }
+    .controls {
+      position: absolute;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      text-align: center; z-index: 10;
+    }
+    .controls button {
+      padding: 8px 16px; margin: 5px; font-size: 16px;
     }
   </style>
 </head>
 <body>
-  <div class="toolbar">
+
+<div id="game-container">
+  <div class="controls">
     <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
     <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
-    <button onclick="rotateImage(15)">🔄 หมุน +15°</button>
-    <button onclick="rotateImage(-15)">↩️ หมุน -15°</button>
+    <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
+    <button onclick="rotateRight()">⟳ หมุนขวา</button>
   </div>
-  <canvas id="gameCanvas" width="1200" height="2200"></canvas>
+</div>
 
-  <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+<script>
+  const images = [
+    "1-yellow-big-triangle.png",
+    "2-red-big-triangle.png",
+    "3-purple-medium-triangle.png",
+    "4-blue-small-triangle.png",
+    "5-pink-small-triangle.png",
+    "6-orange-parallelogram.png",
+    "7-green-diamond.png"
+  ];
 
-    let shapes = [];
-    let activeShape = null;
-    let offsetX, offsetY;
+  const container = document.getElementById('game-container');
+  let selectedPiece = null;
 
-    const imageFiles = [
-      "1-yellow-big-triangle.png",
-      "2-red-big-triangle.png",
-      "3-purple-medium-triangle.png",
-      "4-blue-small-triangle.png",
-      "5-pink-small-triangle.png",
-      "6-orange-parallelogram.png",
-      "7-green-diamond.png"
-    ];
+  images.forEach((src) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'piece';
+    img.dataset.flipX = "1";
+    img.dataset.flipY = "1";
+    img.dataset.rotate = "0";
 
-    let loadedCount = 0;
+    img.onload = () => {
+      const maxX = container.clientWidth - img.width;
+      const maxY = container.clientHeight - img.height;
+      img.style.left = Math.random() * maxX + 'px';
+      img.style.top = Math.random() * maxY + 'px';
+    };
 
-    imageFiles.forEach((src, index) => {
-      const img = new Image();
-      img.src = src;
-      img.onload = () => {
-        shapes.push({
-          img: img,
-          x: 120 + index * 60,
-          y: 150 + index * 60,
-          scaleX: 1,
-          scaleY: 1,
-          rotation: 0
-        });
-        loadedCount++;
-        if (loadedCount === imageFiles.length) draw();
-      };
+    img.onclick = () => selectedPiece = img;
+    makeDraggableAndRotatable(img);
+    container.appendChild(img);
+  });
+
+  function makeDraggableAndRotatable(el) {
+    let offsetX = 0, offsetY = 0;
+    let isDragging = false;
+    let initialAngle = 0;
+    let startAngle = 0;
+
+    el.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        const rect = el.getBoundingClientRect();
+        offsetX = e.touches[0].clientX - rect.left;
+        offsetY = e.touches[0].clientY - rect.top;
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        const [t1, t2] = e.touches;
+        initialAngle = getAngle(t1, t2);
+        startAngle = parseFloat(el.dataset.rotate || "0");
+      }
+      selectedPiece = el;
     });
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      shapes.forEach(shape => {
-        ctx.save();
-        ctx.translate(shape.x, shape.y);
-        ctx.rotate(shape.rotation);
-        ctx.scale(shape.scaleX, shape.scaleY);
-        ctx.drawImage(shape.img, -shape.img.width/2, -shape.img.height/2);
-        ctx.restore();
-      });
-    }
+    el.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      if (isDragging && e.touches.length === 1) {
+        const clientX = e.touches[0].clientX;
+        const clientY = e.touches[0].clientY;
+        const x = clientX - container.getBoundingClientRect().left - offsetX;
+        const y = clientY - container.getBoundingClientRect().top - offsetY;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+      } else if (e.touches.length === 2) {
+        const [t1, t2] = e.touches;
+        const currentAngle = getAngle(t1, t2);
+        const angleDiff = currentAngle - initialAngle;
+        const newAngle = startAngle + angleDiff;
+        el.dataset.rotate = newAngle;
+        updateTransform(el);
+      }
+    });
 
-    function getMousePos(evt) {
-      const rect = canvas.getBoundingClientRect();
-      return {
-        x: evt.clientX - rect.left,
-        y: evt.clientY - rect.top
+    el.addEventListener('touchend', function() {
+      isDragging = false;
+    });
+
+    el.onmousedown = function(e) {
+      e.preventDefault();
+      offsetX = e.offsetX;
+      offsetY = e.offsetY;
+      selectedPiece = el;
+
+      document.onmousemove = function(e) {
+        const x = e.clientX - container.getBoundingClientRect().left - offsetX;
+        const y = e.clientY - container.getBoundingClientRect().top - offsetY;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
       };
-    }
 
-    function getTouchPos(evt) {
-      const rect = canvas.getBoundingClientRect();
-      return {
-        x: evt.touches[0].clientX - rect.left,
-        y: evt.touches[0].clientY - rect.top
+      document.onmouseup = function() {
+        document.onmousemove = null;
+        document.onmouseup = null;
       };
-    }
+    };
 
-    canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', duringDrag);
-    canvas.addEventListener('mouseup', endDrag);
+    el.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      let currentAngle = parseFloat(el.dataset.rotate || "0");
+      currentAngle += e.deltaY > 0 ? 5 : -5;
+      el.dataset.rotate = currentAngle;
+      updateTransform(el);
+    });
+  }
 
-    canvas.addEventListener('touchstart', startDragTouch, { passive: false });
-    canvas.addEventListener('touchmove', duringDragTouch, { passive: false });
-    canvas.addEventListener('touchend', endDrag, { passive: false });
+  function getAngle(t1, t2) {
+    const dx = t2.clientX - t1.clientX;
+    const dy = t2.clientY - t1.clientY;
+    return Math.atan2(dy, dx) * 180 / Math.PI;
+  }
 
-    function startDrag(evt) {
-      const pos = getMousePos(evt);
-      selectShape(pos);
-    }
+  function flipHorizontally() {
+    if (!selectedPiece) return;
+    selectedPiece.dataset.flipX *= -1;
+    updateTransform(selectedPiece);
+  }
 
-    function startDragTouch(evt) {
-      evt.preventDefault();
-      const pos = getTouchPos(evt);
-      selectShape(pos);
-    }
+  function flipVertically() {
+    if (!selectedPiece) return;
+    selectedPiece.dataset.flipY *= -1;
+    updateTransform(selectedPiece);
+  }
 
-    function selectShape(pos) {
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        const shape = shapes[i];
-        const dx = pos.x - shape.x;
-        const dy = pos.y - shape.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 100) {
-          activeShape = shape;  // <- อัปเดตเสมอ
-          offsetX = dx;
-          offsetY = dy;
-          break;
-        }
-      }
-    }
+  function rotateLeft() {
+    if (!selectedPiece) return;
+    let angle = parseFloat(selectedPiece.dataset.rotate || "0");
+    angle -= 15;
+    selectedPiece.dataset.rotate = angle;
+    updateTransform(selectedPiece);
+  }
 
-    function duringDrag(evt) {
-      if (!activeShape) return;
-      const pos = getMousePos(evt);
-      activeShape.x = pos.x - offsetX;
-      activeShape.y = pos.y - offsetY;
-      draw();
-    }
+  function rotateRight() {
+    if (!selectedPiece) return;
+    let angle = parseFloat(selectedPiece.dataset.rotate || "0");
+    angle += 15;
+    selectedPiece.dataset.rotate = angle;
+    updateTransform(selectedPiece);
+  }
 
-    function duringDragTouch(evt) {
-      if (!activeShape) return;
-      const pos = getTouchPos(evt);
-      activeShape.x = pos.x - offsetX;
-      activeShape.y = pos.y - offsetY;
+  function updateTransform(img) {
+    const scaleX = img.dataset.flipX || 1;
+    const scaleY = img.dataset.flipY || 1;
+    const rotate = img.dataset.rotate || 0;
+    img.style.transform = `scale(${scaleX}, ${scaleY}) rotate(${rotate}deg)`;
+  }
+</script>
 
-      if (evt.touches.length === 2) {
-        const touch1 = evt.touches[0];
-        const touch2 = evt.touches[1];
-        const dx = touch2.clientX - touch1.clientX;
-        const dy = touch2.clientY - touch1.clientY;
-        const angle = Math.atan2(dy, dx);
-        activeShape.rotation = angle;
-      }
-
-      draw();
-    }
-
-    function endDrag() {
-      activeShape = null;
-    }
-
-    function flipHorizontally() {
-      if (activeShape) {
-        activeShape.scaleX *= -1;
-        draw();
-      }
-    }
-
-    function flipVertically() {
-      if (activeShape) {
-        activeShape.scaleY *= -1;
-        draw();
-      }
-    }
-
-    function rotateImage(angleDeg) {
-      if (activeShape) {
-        activeShape.rotation += angleDeg * Math.PI / 180;
-        draw();
-      }
-    }
-  </script>
 </body>
 </html>
