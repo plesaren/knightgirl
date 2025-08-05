@@ -1,159 +1,92 @@
+
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>เกมลากหมุนภาพ</title>
+  <title>Drag and Flip Shapes</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: sans-serif;
-      background: #f0f0f0;
-    }
-
-    h1 {
-      margin: 20px 0 10px;
-      text-align: center;
-    }
-
-    p {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    #game-container {
-      width: 90vw;
-      height: 70vh;
-      max-width: 1000px;
-      max-height: 700px;
-      border: 2px dashed #aaa;
-      margin: 0 auto;
-      position: relative;
-      background: white;
-      overflow: hidden;
+    canvas {
+      border: 1px solid #ccc;
       touch-action: none;
     }
-
-    .piece {
-      position: absolute;
-      cursor: grab;
-      user-select: none;
-      touch-action: none;
-    }
-
-    .piece:active {
-      cursor: grabbing;
-    }
-
-    @media (max-width: 600px) {
-      h1 { font-size: 1.2em; }
-      #game-container { width: 95vw; height: 60vh; }
+    button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-<h1>🧩 เกมลากและหมุนชิ้นส่วน</h1>
-<p>เล่นได้ทั้งคอมและมือถือ — ลาก/หมุน/หมุนสองนิ้ว</p>
+<h2>เกมลากชิ้นส่วน</h2>
 
-<div id="game-container"></div>
+<!-- ปุ่มควบคุม -->
+<button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
+<button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
+
+<br><br>
+<canvas id="c" width="800" height="600"></canvas>
 
 <script>
-const images = [
-  "1-yellow-big-triangle.png",
-  "2-red-big-triangle.png",
-  "3-purple-medium-triangle.png",
-  "4-blue-small-triangle.png",
-  "5-pink-small-triangle.png",
-  "6-orange-parallelogram.png",
-  "7-green-diamond.png"
-];
-
-const container = document.getElementById('game-container');
-
-images.forEach((src) => {
-  const img = document.createElement('img');
-  img.src = src;
-  img.className = 'piece';
-
-  img.onload = () => {
-    const maxX = container.clientWidth - img.width;
-    const maxY = container.clientHeight - img.height;
-    img.style.left = Math.random() * maxX + 'px';
-    img.style.top = Math.random() * maxY + 'px';
-  };
-
-  makeDraggableAndRotatable(img);
-  container.appendChild(img);
-});
-
-function makeDraggableAndRotatable(el) {
-  let offsetX = 0, offsetY = 0;
-  let isDragging = false;
-  let currentRotation = 0;
-  let initialAngle = 0;
-
-  // Mouse drag
-  el.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
-
-    document.onmousemove = (e) => {
-      if (!isDragging) return;
-      const x = e.clientX - container.getBoundingClientRect().left - offsetX;
-      const y = e.clientY - container.getBoundingClientRect().top - offsetY;
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-    };
-
-    document.onmouseup = () => {
-      isDragging = false;
-      document.onmousemove = null;
-      document.onmouseup = null;
-    };
+  const canvas = new fabric.Canvas('c', {
+    selection: false
   });
 
-  // Touch drag + rotate
-  el.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const rect = el.getBoundingClientRect();
-      offsetX = touch.clientX - rect.left;
-      offsetY = touch.clientY - rect.top;
-    }
+  // โหลดภาพ PNG และเพิ่มลง canvas
+  const imageSources = [
+    "1-yellow-big-triangle.png",
+    "2-red-big-triangle.png",
+    "3-purple-medium-triangle.png",
+    "4-blue-small-triangle.png",
+    "5-pink-small-triangle.png",
+    "6-orange-parallelogram.png",
+    "7-green-diamond.png"
+  ];
 
-    if (e.touches.length === 2) {
-      const angle = getAngle(e.touches[0], e.touches[1]);
-      initialAngle = angle - currentRotation;
-    }
-  }, { passive: false });
+  let activeShape = null;
 
-  el.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const x = touch.clientX - container.getBoundingClientRect().left - offsetX;
-      const y = touch.clientY - container.getBoundingClientRect().top - offsetY;
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-    }
+  imageSources.forEach((src, i) => {
+    fabric.Image.fromURL(src, function(img) {
+      img.set({
+        left: 50 + (i * 50),
+        top: 50 + (i * 20),
+        hasControls: true,
+        lockScalingFlip: true,
+        cornerColor: 'blue',
+        transparentCorners: false
+      });
+      img.scaleToWidth(80);
+      canvas.add(img);
+    });
+  });
 
-    if (e.touches.length === 2) {
-      const angle = getAngle(e.touches[0], e.touches[1]);
-      currentRotation = angle - initialAngle;
-      el.style.transform = `rotate(${currentRotation}deg)`;
-    }
-  }, { passive: false });
-}
+  // เมื่อคลิกที่วัตถุ
+  canvas.on('selection:created', function(e) {
+    activeShape = e.target;
+  });
 
-function getAngle(touch1, touch2) {
-  const dx = touch2.clientX - touch1.clientX;
-  const dy = touch2.clientY - touch1.clientY;
-  return Math.atan2(dy, dx) * 180 / Math.PI;
-}
+  canvas.on('selection:updated', function(e) {
+    activeShape = e.target;
+  });
+
+  canvas.on('selection:cleared', function() {
+    activeShape = null;
+  });
+
+  function flipHorizontally() {
+    if (activeShape) {
+      activeShape.scaleX *= -1;
+      canvas.renderAll();
+    }
+  }
+
+  function flipVertically() {
+    if (activeShape) {
+      activeShape.scaleY *= -1;
+      canvas.renderAll();
+    }
+  }
 </script>
 
 </body>
