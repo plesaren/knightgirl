@@ -58,9 +58,9 @@
       margin-bottom: 10px;
     }
 
-    .controls button {
-      padding: 8px 16px;
-      margin: 0 5px;
+    .controls button, .controls input[type=range] {
+      padding: 8px 12px;
+      margin: 5px;
       font-size: 16px;
     }
   </style>
@@ -68,11 +68,14 @@
 <body>
 
 <h1>🧩 เกมลากชิ้นส่วน - ขนาดจริง</h1>
-<p>ลากภาพแต่ละชิ้นไปประกอบเป็นภาพใหม่</p>
+<p>ลาก หมุน หรือพลิกภาพ เพื่อประกอบเป็นภาพใหม่</p>
 
 <div class="controls">
   <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
   <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
+  <label>🔁 หมุน:
+    <input type="range" min="0" max="360" value="0" id="rotateSlider" oninput="rotateSelected(this.value)">
+  </label>
 </div>
 
 <div id="game-container"></div>
@@ -97,6 +100,7 @@
     img.className = 'piece';
     img.dataset.flipX = "1";
     img.dataset.flipY = "1";
+    img.dataset.rotate = "0";
 
     img.onload = () => {
       const maxX = container.clientWidth - img.width;
@@ -107,6 +111,7 @@
 
     img.onclick = () => {
       selectedPiece = img;
+      document.getElementById("rotateSlider").value = selectedPiece.dataset.rotate || 0;
     };
 
     makeDraggable(img);
@@ -132,6 +137,7 @@
       document.onmouseup = document.ontouchend = endDrag;
 
       selectedPiece = el;
+      document.getElementById("rotateSlider").value = selectedPiece.dataset.rotate || 0;
     }
 
     function drag(e) {
@@ -164,10 +170,17 @@
     updateTransform(selectedPiece);
   }
 
+  function rotateSelected(angle) {
+    if (!selectedPiece) return;
+    selectedPiece.dataset.rotate = angle;
+    updateTransform(selectedPiece);
+  }
+
   function updateTransform(img) {
-    const scaleX = img.dataset.flipX;
-    const scaleY = img.dataset.flipY;
-    img.style.transform = `scale(${scaleX}, ${scaleY})`;
+    const scaleX = img.dataset.flipX || 1;
+    const scaleY = img.dataset.flipY || 1;
+    const rotate = img.dataset.rotate || 0;
+    img.style.transform = `scale(${scaleX}, ${scaleY}) rotate(${rotate}deg)`;
   }
 </script>
 
