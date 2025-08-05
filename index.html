@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -38,6 +39,9 @@
       position: absolute;
       cursor: grab;
       user-select: none;
+      touch-action: none;
+      max-width: 100%;
+      height: auto;
     }
 
     .piece:active {
@@ -48,12 +52,28 @@
       h1 { font-size: 1.2em; }
       #game-container { width: 95vw; height: 60vh; }
     }
+
+    .controls {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .controls button {
+      padding: 8px 16px;
+      margin: 0 5px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
 
 <h1>🧩 เกมลากชิ้นส่วน - ขนาดจริง</h1>
 <p>ลากภาพแต่ละชิ้นไปประกอบเป็นภาพใหม่</p>
+
+<div class="controls">
+  <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
+  <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
+</div>
 
 <div id="game-container"></div>
 
@@ -69,17 +89,24 @@
   ];
 
   const container = document.getElementById('game-container');
+  let selectedPiece = null;
 
   images.forEach((src) => {
     const img = document.createElement('img');
     img.src = src;
     img.className = 'piece';
+    img.dataset.flipX = "1";
+    img.dataset.flipY = "1";
 
     img.onload = () => {
       const maxX = container.clientWidth - img.width;
       const maxY = container.clientHeight - img.height;
       img.style.left = Math.random() * maxX + 'px';
       img.style.top = Math.random() * maxY + 'px';
+    };
+
+    img.onclick = () => {
+      selectedPiece = img;
     };
 
     makeDraggable(img);
@@ -103,6 +130,8 @@
 
       document.onmousemove = document.ontouchmove = drag;
       document.onmouseup = document.ontouchend = endDrag;
+
+      selectedPiece = el;
     }
 
     function drag(e) {
@@ -121,6 +150,24 @@
       document.onmousemove = document.ontouchmove = null;
       document.onmouseup = document.ontouchend = null;
     }
+  }
+
+  function flipHorizontally() {
+    if (!selectedPiece) return;
+    selectedPiece.dataset.flipX *= -1;
+    updateTransform(selectedPiece);
+  }
+
+  function flipVertically() {
+    if (!selectedPiece) return;
+    selectedPiece.dataset.flipY *= -1;
+    updateTransform(selectedPiece);
+  }
+
+  function updateTransform(img) {
+    const scaleX = img.dataset.flipX;
+    const scaleY = img.dataset.flipY;
+    img.style.transform = `scale(${scaleX}, ${scaleY})`;
   }
 </script>
 
