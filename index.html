@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="="th">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <title>เกมลากชิ้นส่วนภาพ</title>
@@ -32,12 +32,14 @@
 </head>
 <body>
 
-<h1>🧩 เกมลากชิ้นส่วน - หมุนด้วยนิ้วและเมาส์</h1>
-<p>แตะภาพแล้วใช้นิ้วหมุน หรือปุ่มกลับด้าน</p>
+<h1>🧩 เกมลากชิ้นส่วน - หมุนและกลับด้าน</h1>
+<p>แตะภาพแล้วใช้นิ้วหมุน หรือใช้ปุ่มด้านล่าง</p>
 
 <div class="controls">
   <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
   <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
+  <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
+  <button onclick="rotateRight()">⟳ หมุนขวา</button>
 </div>
 
 <div id="game-container"></div>
@@ -163,6 +165,22 @@
   function flipVertically() {
     if (!selectedPiece) return;
     selectedPiece.dataset.flipY *= -1;
+    updateTransform(selectedPiece);
+  }
+
+  function rotateLeft() {
+    if (!selectedPiece) return;
+    let angle = parseFloat(selectedPiece.dataset.rotate || "0");
+    angle -= 15;
+    selectedPiece.dataset.rotate = angle;
+    updateTransform(selectedPiece);
+  }
+
+  function rotateRight() {
+    if (!selectedPiece) return;
+    let angle = parseFloat(selectedPiece.dataset.rotate || "0");
+    angle += 15;
+    selectedPiece.dataset.rotate = angle;
     updateTransform(selectedPiece);
   }
 
