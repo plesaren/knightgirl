@@ -1,81 +1,43 @@
 
 <!DOCTYPE html>
-<html lang="th">
+<html lang="="th">
 <head>
   <meta charset="UTF-8">
   <title>เกมลากชิ้นส่วนภาพ</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: sans-serif;
-      background: #f0f0f0;
+      margin: 0; padding: 0; height: 100%;
+      font-family: sans-serif; background: #f0f0f0;
     }
-
-    h1 {
-      margin: 20px 0 10px;
-      text-align: center;
-    }
-
-    p {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
+    h1 { margin: 20px 0 10px; text-align: center; }
+    p { text-align: center; margin-bottom: 10px; }
     #game-container {
-      width: 90vw;
-      height: 70vh;
-      max-width: 1000px;
-      max-height: 700px;
-      border: 2px dashed #aaa;
-      margin: 0 auto;
-      position: relative;
-      background: white;
-      overflow: hidden;
+      width: 90vw; height: 70vh; max-width: 1000px; max-height: 700px;
+      border: 2px dashed #aaa; margin: 0 auto; position: relative;
+      background: white; overflow: hidden; touch-action: none;
     }
-
     .piece {
-      position: absolute;
-      cursor: grab;
-      user-select: none;
-      touch-action: none;
-      max-width: 100%;
-      height: auto;
+      position: absolute; cursor: grab; user-select: none;
+      touch-action: none; max-width: 100%; height: auto;
+      transform-origin: center center;
     }
-
-    .piece:active {
-      cursor: grabbing;
-    }
-
-    @media (max-width: 600px) {
-      h1 { font-size: 1.2em; }
-      #game-container { width: 95vw; height: 60vh; }
-    }
-
+    .piece:active { cursor: grabbing; }
     .controls {
-      text-align: center;
-      margin-bottom: 10px;
+      text-align: center; margin-bottom: 10px;
     }
-
-    .controls button, .controls input[type=range] {
-      padding: 8px 12px;
-      margin: 5px;
-      font-size: 16px;
+    .controls button {
+      padding: 8px 16px; margin: 5px; font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-<h1>🧩 เกมลากชิ้นส่วน - ขนาดจริง</h1>
-<p>ลาก หมุน หรือพลิกภาพ เพื่อประกอบเป็นภาพใหม่</p>
+<h1>🧩 เกมลากชิ้นส่วน - หมุนด้วยนิ้วและเมาส์</h1>
+<p>แตะภาพแล้วใช้นิ้วหมุน หรือปุ่มกลับด้าน</p>
 
 <div class="controls">
   <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
   <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
-  <label>🔁 หมุน:
-    <input type="range" min="0" max="360" value="0" id="rotateSlider" oninput="rotateSelected(this.value)">
-  </label>
 </div>
 
 <div id="game-container"></div>
@@ -109,53 +71,87 @@
       img.style.top = Math.random() * maxY + 'px';
     };
 
-    img.onclick = () => {
-      selectedPiece = img;
-      document.getElementById("rotateSlider").value = selectedPiece.dataset.rotate || 0;
-    };
-
-    makeDraggable(img);
+    img.onclick = () => selectedPiece = img;
+    makeDraggableAndRotatable(img);
     container.appendChild(img);
   });
 
-  function makeDraggable(el) {
+  function makeDraggableAndRotatable(el) {
     let offsetX = 0, offsetY = 0;
+    let isDragging = false;
+    let initialAngle = 0;
+    let startAngle = 0;
 
-    el.onmousedown = startDrag;
-    el.ontouchstart = startDrag;
-
-    function startDrag(e) {
-      e.preventDefault();
-      const isTouch = e.type === 'touchstart';
-      const startX = isTouch ? e.touches[0].clientX : e.clientX;
-      const startY = isTouch ? e.touches[0].clientY : e.clientY;
-      const rect = el.getBoundingClientRect();
-      offsetX = startX - rect.left;
-      offsetY = startY - rect.top;
-
-      document.onmousemove = document.ontouchmove = drag;
-      document.onmouseup = document.ontouchend = endDrag;
-
+    el.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        const rect = el.getBoundingClientRect();
+        offsetX = e.touches[0].clientX - rect.left;
+        offsetY = e.touches[0].clientY - rect.top;
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        const [t1, t2] = e.touches;
+        initialAngle = getAngle(t1, t2);
+        startAngle = parseFloat(el.dataset.rotate || "0");
+      }
       selectedPiece = el;
-      document.getElementById("rotateSlider").value = selectedPiece.dataset.rotate || 0;
-    }
+    });
 
-    function drag(e) {
-      const isTouch = e.type === 'touchmove';
-      const clientX = isTouch ? e.touches[0].clientX : e.clientX;
-      const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+    el.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      if (isDragging && e.touches.length === 1) {
+        const clientX = e.touches[0].clientX;
+        const clientY = e.touches[0].clientY;
+        const x = clientX - container.getBoundingClientRect().left - offsetX;
+        const y = clientY - container.getBoundingClientRect().top - offsetY;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+      } else if (e.touches.length === 2) {
+        const [t1, t2] = e.touches;
+        const currentAngle = getAngle(t1, t2);
+        const angleDiff = currentAngle - initialAngle;
+        const newAngle = startAngle + angleDiff;
+        el.dataset.rotate = newAngle;
+        updateTransform(el);
+      }
+    });
 
-      const x = clientX - container.getBoundingClientRect().left - offsetX;
-      const y = clientY - container.getBoundingClientRect().top - offsetY;
+    el.addEventListener('touchend', function() {
+      isDragging = false;
+    });
 
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-    }
+    el.onmousedown = function(e) {
+      e.preventDefault();
+      offsetX = e.offsetX;
+      offsetY = e.offsetY;
+      selectedPiece = el;
 
-    function endDrag() {
-      document.onmousemove = document.ontouchmove = null;
-      document.onmouseup = document.ontouchend = null;
-    }
+      document.onmousemove = function(e) {
+        const x = e.clientX - container.getBoundingClientRect().left - offsetX;
+        const y = e.clientY - container.getBoundingClientRect().top - offsetY;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+      };
+
+      document.onmouseup = function() {
+        document.onmousemove = null;
+        document.onmouseup = null;
+      };
+    };
+
+    el.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      let currentAngle = parseFloat(el.dataset.rotate || "0");
+      currentAngle += e.deltaY > 0 ? 5 : -5;
+      el.dataset.rotate = currentAngle;
+      updateTransform(el);
+    });
+  }
+
+  function getAngle(t1, t2) {
+    const dx = t2.clientX - t1.clientX;
+    const dy = t2.clientY - t1.clientY;
+    return Math.atan2(dy, dx) * 180 / Math.PI;
   }
 
   function flipHorizontally() {
@@ -167,12 +163,6 @@
   function flipVertically() {
     if (!selectedPiece) return;
     selectedPiece.dataset.flipY *= -1;
-    updateTransform(selectedPiece);
-  }
-
-  function rotateSelected(angle) {
-    if (!selectedPiece) return;
-    selectedPiece.dataset.rotate = angle;
     updateTransform(selectedPiece);
   }
 
