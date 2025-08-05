@@ -9,8 +9,6 @@
       margin: 0; padding: 0; height: 100%;
       font-family: sans-serif; background: #f0f0f0;
     }
-    h1 { margin: 20px 0 10px; text-align: center; }
-    p { text-align: center; margin-bottom: 10px; }
     #game-container {
       width: 100vw; height: 100vh;
       border: 2px dashed #aaa; margin: 0 auto;
@@ -21,8 +19,11 @@
       position: absolute; cursor: grab; user-select: none;
       touch-action: none; max-width: 100%; height: auto;
       transform-origin: center center;
+      border: 2px solid transparent;
     }
-    .piece:active { cursor: grabbing; }
+    .piece.selected {
+      border: 2px dashed blue;
+    }
     .controls {
       position: absolute;
       top: 10px; left: 50%;
@@ -40,8 +41,8 @@
   <div class="controls">
     <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
     <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
-    <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
-    <button onclick="rotateRight()">⟳ หมุนขวา</button>
+    <button onclick="rotateRight()">⟳ หมุน +15°</button>
+    <button onclick="rotateLeft()">⟲ หมุน -15°</button>
   </div>
 </div>
 
@@ -74,7 +75,12 @@
       img.style.top = Math.random() * maxY + 'px';
     };
 
-    img.onclick = () => selectedPiece = img;
+    img.addEventListener("click", () => {
+      document.querySelectorAll('.piece').forEach(p => p.classList.remove("selected"));
+      selectedPiece = img;
+      img.classList.add("selected");
+    });
+
     makeDraggableAndRotatable(img);
     container.appendChild(img);
   });
@@ -98,6 +104,8 @@
         startAngle = parseFloat(el.dataset.rotate || "0");
       }
       selectedPiece = el;
+      document.querySelectorAll('.piece').forEach(p => p.classList.remove("selected"));
+      el.classList.add("selected");
     });
 
     el.addEventListener('touchmove', function(e) {
@@ -128,6 +136,8 @@
       offsetX = e.offsetX;
       offsetY = e.offsetY;
       selectedPiece = el;
+      document.querySelectorAll('.piece').forEach(p => p.classList.remove("selected"));
+      el.classList.add("selected");
 
       document.onmousemove = function(e) {
         const x = e.clientX - container.getBoundingClientRect().left - offsetX;
