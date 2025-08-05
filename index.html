@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>เกมลากภาพ</title>
+  <title>เกมลากภาพ - ปรับฟังก์ชันครบ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -34,7 +34,7 @@
     <button onclick="rotateImage(15)">🔄 หมุน +15°</button>
     <button onclick="rotateImage(-15)">↩️ หมุน -15°</button>
   </div>
-  <canvas id="gameCanvas" width="800" height="2000"></canvas>
+  <canvas id="gameCanvas" width="1200" height="2200"></canvas>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
@@ -62,8 +62,8 @@
       img.onload = () => {
         shapes.push({
           img: img,
-          x: 100 + index * 40,
-          y: 100 + index * 40,
+          x: 120 + index * 60,
+          y: 150 + index * 60,
           scaleX: 1,
           scaleY: 1,
           rotation: 0
@@ -123,11 +123,13 @@
     function selectShape(pos) {
       for (let i = shapes.length - 1; i >= 0; i--) {
         const shape = shapes[i];
-        if (pos.x > shape.x - 50 && pos.x < shape.x + 50 &&
-            pos.y > shape.y - 50 && pos.y < shape.y + 50) {
+        const dx = pos.x - shape.x;
+        const dy = pos.y - shape.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 100) {
           activeShape = shape;
-          offsetX = pos.x - shape.x;
-          offsetY = pos.y - shape.y;
+          offsetX = dx;
+          offsetY = dy;
           break;
         }
       }
@@ -146,6 +148,16 @@
       const pos = getTouchPos(evt);
       activeShape.x = pos.x - offsetX;
       activeShape.y = pos.y - offsetY;
+
+      if (evt.touches.length === 2) {
+        const touch1 = evt.touches[0];
+        const touch2 = evt.touches[1];
+        const dx = touch2.clientX - touch1.clientX;
+        const dy = touch2.clientY - touch1.clientY;
+        const angle = Math.atan2(dy, dx);
+        activeShape.rotation = angle;
+      }
+
       draw();
     }
 
