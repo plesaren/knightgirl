@@ -2,222 +2,206 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>เกมต่อชิ้นส่วนประกอบย่อย</title>
+  <meta charset="UTF-8">
+  <title>เกมลากชิ้นส่วนภาพ</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: sans-serif;
-      background: #f0f0f0;
+      margin: 0; padding: 0; height: 100%;
+      font-family: sans-serif; background: #f0f0f0;
     }
-
-    h1 {
-      margin: 20px 0 10px;
-      text-align: center;
-    }
-
-    p {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
     #game-container {
-      width: 90vw;
-      height: 92vh;
-      max-width: 1200px;
-      border: 2px dashed #aaa;
-      margin: 0 auto;
-      position: relative;
-      background: white;
-      overflow: hidden;
-      touch-action: none;
+      width: 100vw; height: 100vh;
+      border: 2px dashed #aaa; margin: 0 auto;
+      position: relative; background: white;
+      overflow: hidden; touch-action: none;
     }
-
     .piece {
-      position: absolute;
-      cursor: grab;
-      user-select: none;
-      touch-action: none;
+      position: absolute; cursor: grab; user-select: none;
+      touch-action: none; max-width: 100%; height: auto;
       transform-origin: center center;
+      border: 2px solid transparent;
     }
-
-    .piece:active {
-      cursor: grabbing;
+    .piece.selected {
+      border: 2px dashed blue;
     }
-
-    #controls {
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    #controls button {
-      margin: 0 5px;
-      padding: 6px 12px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    #fixed-example {
+    .controls {
       position: absolute;
-      bottom: 10px;
-      left: 10px;
-      width: 150px;
-      opacity: 0.7;
-      pointer-events: none;
-      z-index: 2;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      text-align: center; z-index: 10;
+    }
+    .controls button {
+      padding: 8px 16px; margin: 5px; font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-  <h1>เกมลากชิ้นส่วน</h1>
-  <p>ลาก วาง หมุน และกลับด้านภาพเพื่อสร้างภาพใหม่</p>
-
-  <div id="game-container">
-    <img id="fixed-example" src="example.jpg" alt="example">
-  </div>
-
-  <div id="controls">
+<div id="game-container">
+  <div class="controls">
     <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
     <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
-    <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
-    <button onclick="rotateRight()">⟳ หมุนขวา</button>
+    <button onclick="rotateRight()">⟳ หมุน +15°</button>
+    <button onclick="rotateLeft()">⟲ หมุน -15°</button>
   </div>
+</div>
 
-  <script>
-    const images = [
-      "1-yellow-big-triangle.png",
-      "2-red-big-triangle.png",
-      "3-purple-medium-triangle.png",
-      "4-blue-small-triangle.png",
-      "5-pink-small-triangle.png",
-      "6-orange-parallelogram.png",
-      "7-green-diamond.png"
-    ];
+<script>
+  const images = [
+    "1-yellow-big-triangle.png",
+    "2-red-big-triangle.png",
+    "3-purple-medium-triangle.png",
+    "4-blue-small-triangle.png",
+    "5-pink-small-triangle.png",
+    "6-orange-parallelogram.png",
+    "7-green-diamond.png"
+  ];
 
-    const container = document.getElementById('game-container');
-    let activeShape = null;
-    const stateMap = new Map();
+  const container = document.getElementById('game-container');
+  let selectedPiece = null;
 
-    images.forEach((src) => {
-      const img = document.createElement('img');
-      img.src = src;
-      img.className = 'piece';
-      img.draggable = false;
+  images.forEach((src) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'piece';
+    img.dataset.flipX = "1";
+    img.dataset.flipY = "1";
+    img.dataset.rotate = "0";
 
-      img.onload = () => {
-        const maxX = container.clientWidth - img.width;
-        const maxY = container.clientHeight - img.height;
-        img.style.left = Math.random() * maxX + 'px';
-        img.style.top = Math.random() * maxY + 'px';
-        img.style.transform = 'rotate(0deg) scaleX(1) scaleY(1)';
-        stateMap.set(img, { rotation: 0, scaleX: 1, scaleY: 1 });
-      };
+    img.onload = () => {
+      const maxX = container.clientWidth - img.width;
+      const maxY = container.clientHeight - img.height;
+      img.style.left = Math.random() * maxX + 'px';
+      img.style.top = Math.random() * maxY + 'px';
+    };
 
-      makeDraggableAndTouchable(img);
-      container.appendChild(img);
+    img.addEventListener("click", () => {
+      document.querySelectorAll('.piece').forEach(p => p.classList.remove("selected"));
+      selectedPiece = img;
+      img.classList.add("selected");
     });
 
-    function makeDraggableAndTouchable(el) {
-      let offsetX = 0, offsetY = 0;
+    makeDraggableAndRotatable(img);
+    container.appendChild(img);
+  });
 
-      function onPointerDown(e) {
-        activeShape = el;
-        e.preventDefault();
+  function makeDraggableAndRotatable(el) {
+    let offsetX = 0, offsetY = 0;
+    let isDragging = false;
+    let initialAngle = 0;
+    let startAngle = 0;
+
+    el.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) {
+        isDragging = true;
         const rect = el.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-
-        function onPointerMove(e) {
-          const x = e.clientX - container.getBoundingClientRect().left - offsetX;
-          const y = e.clientY - container.getBoundingClientRect().top - offsetY;
-          el.style.left = x + 'px';
-          el.style.top = y + 'px';
-        }
-
-        function onPointerUp() {
-          document.removeEventListener('pointermove', onPointerMove);
-          document.removeEventListener('pointerup', onPointerUp);
-        }
-
-        document.addEventListener('pointermove', onPointerMove);
-        document.addEventListener('pointerup', onPointerUp);
+        offsetX = e.touches[0].clientX - rect.left;
+        offsetY = e.touches[0].clientY - rect.top;
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        const [t1, t2] = e.touches;
+        initialAngle = getAngle(t1, t2);
+        startAngle = parseFloat(el.dataset.rotate || "0");
       }
+      selectedPiece = el;
+      document.querySelectorAll('.piece').forEach(p => p.classList.remove("selected"));
+      el.classList.add("selected");
+    });
 
-      el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      if (isDragging && e.touches.length === 1) {
+        const clientX = e.touches[0].clientX;
+        const clientY = e.touches[0].clientY;
+        const x = clientX - container.getBoundingClientRect().left - offsetX;
+        const y = clientY - container.getBoundingClientRect().top - offsetY;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+      } else if (e.touches.length === 2) {
+        const [t1, t2] = e.touches;
+        const currentAngle = getAngle(t1, t2);
+        const angleDiff = currentAngle - initialAngle;
+        const newAngle = startAngle + angleDiff;
+        el.dataset.rotate = newAngle;
+        updateTransform(el);
+      }
+    });
 
-      let lastAngle = 0;
-      let rotating = false;
+    el.addEventListener('touchend', function() {
+      isDragging = false;
+    });
 
-      el.addEventListener('pointerdown', (e) => {
-        if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return; // ignore modifiers
-        activeShape = el;
-        lastAngle = null;
-        rotating = true;
+    el.onmousedown = function(e) {
+      e.preventDefault();
+      offsetX = e.offsetX;
+      offsetY = e.offsetY;
+      selectedPiece = el;
+      document.querySelectorAll('.piece').forEach(p => p.classList.remove("selected"));
+      el.classList.add("selected");
 
-        function onMove(ev) {
-          const rect = el.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          const dx = ev.clientX - centerX;
-          const dy = ev.clientY - centerY;
-          const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      document.onmousemove = function(e) {
+        const x = e.clientX - container.getBoundingClientRect().left - offsetX;
+        const y = e.clientY - container.getBoundingClientRect().top - offsetY;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+      };
 
-          if (lastAngle !== null) {
-            const delta = angle - lastAngle;
-            const state = stateMap.get(el);
-            state.rotation += delta;
-            applyTransform(el);
-          }
-          lastAngle = angle;
-        }
+      document.onmouseup = function() {
+        document.onmousemove = null;
+        document.onmouseup = null;
+      };
+    };
 
-        function onUp() {
-          rotating = false;
-          document.removeEventListener('pointermove', onMove);
-          document.removeEventListener('pointerup', onUp);
-        }
+    el.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      let currentAngle = parseFloat(el.dataset.rotate || "0");
+      currentAngle += e.deltaY > 0 ? 5 : -5;
+      el.dataset.rotate = currentAngle;
+      updateTransform(el);
+    });
+  }
 
-        document.addEventListener('pointermove', onMove);
-        document.addEventListener('pointerup', onUp);
-      });
-    }
+  function getAngle(t1, t2) {
+    const dx = t2.clientX - t1.clientX;
+    const dy = t2.clientY - t1.clientY;
+    return Math.atan2(dy, dx) * 180 / Math.PI;
+  }
 
-    function applyTransform(el) {
-      const state = stateMap.get(el);
-      el.style.transform = `rotate(${state.rotation}deg) scaleX(${state.scaleX}) scaleY(${state.scaleY})`;
-    }
+  function flipHorizontally() {
+    if (!selectedPiece) return;
+    selectedPiece.dataset.flipX *= -1;
+    updateTransform(selectedPiece);
+  }
 
-    function flipHorizontally() {
-      if (!activeShape) return;
-      const state = stateMap.get(activeShape);
-      state.scaleX *= -1;
-      applyTransform(activeShape);
-    }
+  function flipVertically() {
+    if (!selectedPiece) return;
+    selectedPiece.dataset.flipY *= -1;
+    updateTransform(selectedPiece);
+  }
 
-    function flipVertically() {
-      if (!activeShape) return;
-      const state = stateMap.get(activeShape);
-      state.scaleY *= -1;
-      applyTransform(activeShape);
-    }
+  function rotateLeft() {
+    if (!selectedPiece) return;
+    let angle = parseFloat(selectedPiece.dataset.rotate || "0");
+    angle -= 15;
+    selectedPiece.dataset.rotate = angle;
+    updateTransform(selectedPiece);
+  }
 
-    function rotateLeft() {
-      if (!activeShape) return;
-      const state = stateMap.get(activeShape);
-      state.rotation -= 15;
-      applyTransform(activeShape);
-    }
+  function rotateRight() {
+    if (!selectedPiece) return;
+    let angle = parseFloat(selectedPiece.dataset.rotate || "0");
+    angle += 15;
+    selectedPiece.dataset.rotate = angle;
+    updateTransform(selectedPiece);
+  }
 
-    function rotateRight() {
-      if (!activeShape) return;
-      const state = stateMap.get(activeShape);
-      state.rotation += 15;
-      applyTransform(activeShape);
-    }
-  </script>
+  function updateTransform(img) {
+    const scaleX = img.dataset.flipX || 1;
+    const scaleY = img.dataset.flipY || 1;
+    const rotate = img.dataset.rotate || 0;
+    img.style.transform = `scale(${scaleX}, ${scaleY}) rotate(${rotate}deg)`;
+  }
+</script>
 
 </body>
 </html>
