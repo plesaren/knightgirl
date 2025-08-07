@@ -45,11 +45,16 @@
   outline: 3px solid #007bff;
   z-index: 10;
 }
+
 .piece.lifted {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-  transform: scale(1.1);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  transform: scale(1.08);
+  opacity: 0.96;
+  backdrop-filter: blur(2px);
+  transition: all 0.1s ease;
   z-index: 20;
 }
+
 
 .piece.active-piece {
       outline: 3px solid #007bff;
@@ -89,8 +94,8 @@
 
   <div id="game-container">
     <div id="controls">
-      <button onclick="flipHorizontally()">↔️ พลิกซ้าย–ขวา</button>
-      <button onclick="flipVertically()">↕️ พลิกบน–ล่าง</button>
+      <button onclick="flipHorizontally()">⟷ พลิกซ้าย–ขวา</button>
+      <button onclick="flipVertically()">⟲ พลิกบน–ล่าง</button>
       <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
       <button onclick="rotateRight()">⟳ หมุนขวา</button>
     </div>
