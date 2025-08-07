@@ -206,7 +206,8 @@ el.classList.add('lifted');
 
     function applyTransform(el) {
       const state = stateMap.get(el);
-      el.style.transform = `rotate(${state.rotation}deg) scaleX(${state.scaleX}) scaleY(${state.scaleY})`;
+      let scale = el.classList.contains('lifted') ? 1.1 : 1;
+  el.style.transform = `rotate(${state.rotation}deg) scale(${scale}) scaleX(${state.scaleX}) scaleY(${state.scaleY})`;
     }
 
     function flipHorizontally() {
