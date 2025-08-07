@@ -161,23 +161,26 @@
     }
 
     function applyTransform(el) {
-      const state = stateMap.get(el);
-      el.style.transform = `rotate(${state.rotation}deg) scaleX(${state.scaleX}) scaleY(${state.scaleY})`;
+  const state = stateMap.get(el);
+  const scaleX = state.flipH ? -1 : 1;
+  const scaleY = state.flipV ? -1 : 1;
+  el.style.transform = `rotate(${state.rotation}deg) scaleX(${scaleX}) scaleY(${scaleY})`;
+}deg) scaleX(${state.scaleX}) scaleY(${state.scaleY})`;
     }
 
     function flipHorizontally() {
-      if (!activeShape) return;
-      const state = stateMap.get(activeShape);
-      state.scaleX *= -1;
-      applyTransform(activeShape);
-    }
+  if (!activeShape) return;
+  const state = stateMap.get(activeShape);
+  state.flipH = !state.flipH;
+  applyTransform(activeShape);
+}
 
     function flipVertically() {
-      if (!activeShape) return;
-      const state = stateMap.get(activeShape);
-      state.scaleY *= -1;
-      applyTransform(activeShape);
-    }
+  if (!activeShape) return;
+  const state = stateMap.get(activeShape);
+  state.flipV = !state.flipV;
+  applyTransform(activeShape);
+}
 
     function rotateLeft() {
       if (!activeShape) return;
