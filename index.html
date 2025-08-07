@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -23,8 +24,10 @@
     }
 
     #game-container {
-      width: 100vw;
-      height: calc(100vh - 140px);
+      width: 90vw;
+      height: 85vh;
+      max-width: 1200px;
+      max-height: 1000px;
       border: 2px dashed #aaa;
       margin: 0 auto;
       position: relative;
@@ -46,8 +49,15 @@
     }
 
     #controls {
-      text-align: center;
-      margin-top: 10px;
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     #controls button {
@@ -71,15 +81,15 @@
 <body>
 
   <h1>เกมต่อชิ้นส่วนประกอบย่อย</h1>
-  <p>ลาก วาง หมุน และพลิกภาพเพื่อสร้างภาพใหม่</p>
+  <p>ลาก วาง หมุน และกลับด้านภาพเพื่อสร้างภาพใหม่</p>
 
   <div id="game-container">
     <img id="fixed-example" src="example.jpg" alt="example">
   </div>
 
   <div id="controls">
-    <button onclick="flipHorizontally()">↔️ พลิกซ้าย–ขวา</button>
-    <button onclick="flipVertically()">↕️ พลิกบน–ล่าง</button>
+    <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
+    <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
     <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
     <button onclick="rotateRight()">⟳ หมุนขวา</button>
   </div>
@@ -150,7 +160,7 @@
       let rotating = false;
 
       el.addEventListener('pointerdown', (e) => {
-        if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+        if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return; // ignore modifiers
         activeShape = el;
         lastAngle = null;
         rotating = true;
