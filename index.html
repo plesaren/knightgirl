@@ -3,15 +3,12 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>เกมต่อชิ้นส่วนประกอบย่อย</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      width: 100%;
-      overflow: hidden;
       font-family: sans-serif;
       background: #f0f0f0;
     }
@@ -24,18 +21,18 @@
       margin-bottom: 10px;
     }
     #game-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      border: none;
-      margin: 0;
-      padding: 0;
-      background: white;
-      overflow: hidden;
-      touch-action: none;
-    }
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: white;
+  overflow: hidden;
+  touch-action: none;
+}
     .piece {
       position: absolute;
       cursor: grab;
@@ -64,15 +61,15 @@
       cursor: pointer;
     }
     #fixed-example {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      max-width: 40%;
-      height: auto;
-      opacity: 0.7;
-      pointer-events: none;
-      z-index: 1;
-    }
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  max-width: 25%;
+  height: auto;
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 1;
+}
   </style>
 </head>
 <body>
@@ -136,12 +133,14 @@
 
         function onPointerMove(e) {
           const containerRect = container.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
           let x = e.clientX - containerRect.left - offsetX;
           let y = e.clientY - containerRect.top - offsetY;
           x = Math.max(0, Math.min(x, container.clientWidth - el.offsetWidth));
           y = Math.max(0, Math.min(y, container.clientHeight - el.offsetHeight));
           el.style.left = x + 'px';
           el.style.top = y + 'px';
+
         }
 
         function onPointerUp() {
@@ -154,6 +153,11 @@
       }
 
       el.addEventListener('pointerdown', onPointerDown);
+
+      let lastAngle = 0;
+      let rotating = false;
+
+      
     }
 
     function applyTransform(el) {
