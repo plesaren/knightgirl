@@ -166,6 +166,7 @@
     }
 
     function flipHorizontally() {
+      if (activeShape) activeShape.style.zIndex = Date.now();
       if (!activeShape) return;
       const state = stateMap.get(activeShape);
       state.scaleX *= -1;
@@ -173,6 +174,7 @@
     }
 
     function flipVertically() {
+      if (activeShape) activeShape.style.zIndex = Date.now();
       if (!activeShape) return;
       const state = stateMap.get(activeShape);
       state.scaleY *= -1;
