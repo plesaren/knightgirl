@@ -64,7 +64,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      width: 200px;
+      width: 300px;
       opacity: 0.8;
       pointer-events: none;
       z-index: 1;
@@ -133,12 +133,18 @@
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
 
+        
         function onPointerMove(e) {
           const x = e.clientX - container.getBoundingClientRect().left - offsetX;
           const y = e.clientY - container.getBoundingClientRect().top - offsetY;
-          el.style.left = x + 'px';
-          el.style.top = y + 'px';
+
+          // Clamp to stay within container
+          const maxX = container.clientWidth - el.offsetWidth;
+          const maxY = container.clientHeight - el.offsetHeight;
+          el.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+          el.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
         }
+
 
         function onPointerUp() {
           document.removeEventListener('pointermove', onPointerMove);
@@ -217,7 +223,47 @@
       state.rotation += 15;
       applyTransform(activeShape);
     }
-  </script>
+  
+    // Pinch & Rotate with 2 fingers
+    let activeTouches = [];
+
+    container.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      activeTouches.push(e);
+    });
+
+    container.addEventListener('pointerup', (e) => {
+      activeTouches = activeTouches.filter(t => t.pointerId !== e.pointerId);
+    });
+
+    container.addEventListener('pointercancel', (e) => {
+      activeTouches = activeTouches.filter(t => t.pointerId !== e.pointerId);
+    });
+
+    container.addEventListener('pointermove', (e) => {
+      if (activeTouches.length === 2 && activeShape) {
+        e.preventDefault();
+
+        const [t1, t2] = activeTouches;
+        const newT1 = (t1.pointerId === e.pointerId) ? e : t1;
+        const newT2 = (t2.pointerId === e.pointerId) ? e : t2;
+        activeTouches = [newT1, newT2];
+
+        const dx = newT2.clientX - newT1.clientX;
+        const dy = newT2.clientY - newT1.clientY;
+
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        if (typeof activeShape._lastAngle === 'number') {
+          const delta = angle - activeShape._lastAngle;
+          const state = stateMap.get(activeShape);
+          state.rotation += delta;
+          applyTransform(activeShape);
+        }
+        activeShape._lastAngle = angle;
+      }
+    });
+    </script>
+
 
 </body>
 </html>
