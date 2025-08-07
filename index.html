@@ -114,7 +114,7 @@
         img.style.left = Math.random() * maxX + 'px';
         img.style.top = Math.random() * maxY + 'px';
         img.style.transform = 'rotate(0deg) scaleX(1) scaleY(1)';
-        stateMap.set(img, { rotation: 0, scaleX: 1, scaleY: 1 });
+        stateMap.set(img, { rotation: 0, flipH: false, flipV: false });
       };
 
       makeDraggableAndTouchable(img);
