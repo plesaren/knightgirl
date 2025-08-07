@@ -12,22 +12,17 @@
       font-family: sans-serif;
       background: #f0f0f0;
     }
-
     h1 {
       margin: 20px 0 10px;
       text-align: center;
     }
-
     p {
       text-align: center;
       margin-bottom: 10px;
     }
-
     #game-container {
-      width: 90vw;
-      height: 85vh;
-      max-width: 1200px;
-      max-height: 1000px;
+      width: 100vw;
+      height: calc(100vh - 140px);
       border: 2px dashed #aaa;
       margin: 0 auto;
       position: relative;
@@ -35,7 +30,6 @@
       overflow: hidden;
       touch-action: none;
     }
-
     .piece {
       position: absolute;
       cursor: grab;
@@ -43,30 +37,26 @@
       touch-action: none;
       transform-origin: center center;
     }
-
     .piece:active {
       cursor: grabbing;
     }
-
     #controls {
-      position: fixed;
-      bottom: 10px;
+      position: absolute;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.9);
+      z-index: 2;
+      background-color: rgba(255, 255, 255, 0.9);
       padding: 10px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
     }
-
     #controls button {
       margin: 0 5px;
-      padding: 6px 12px;
-      font-size: 16px;
+      padding: 12px 20px;
+      font-size: 18px;
       cursor: pointer;
     }
-
     #fixed-example {
       position: absolute;
       bottom: 10px;
@@ -81,17 +71,16 @@
 <body>
 
   <h1>เกมต่อชิ้นส่วนประกอบย่อย</h1>
-  <p>ลาก วาง หมุน และกลับด้านภาพเพื่อสร้างภาพใหม่</p>
+  <p>ลาก วาง หมุน และพลิกภาพเพื่อสร้างภาพใหม่</p>
 
   <div id="game-container">
+    <div id="controls">
+      <button onclick="flipHorizontally()">↔️ พลิกซ้าย–ขวา</button>
+      <button onclick="flipVertically()">↕️ พลิกบน–ล่าง</button>
+      <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
+      <button onclick="rotateRight()">⟳ หมุนขวา</button>
+    </div>
     <img id="fixed-example" src="example.jpg" alt="example">
-  </div>
-
-  <div id="controls">
-    <button onclick="flipHorizontally()">↔️ กลับซ้าย–ขวา</button>
-    <button onclick="flipVertically()">↕️ กลับบน–ล่าง</button>
-    <button onclick="rotateLeft()">⟲ หมุนซ้าย</button>
-    <button onclick="rotateRight()">⟳ หมุนขวา</button>
   </div>
 
   <script>
@@ -160,7 +149,7 @@
       let rotating = false;
 
       el.addEventListener('pointerdown', (e) => {
-        if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return; // ignore modifiers
+        if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
         activeShape = el;
         lastAngle = null;
         rotating = true;
