@@ -40,6 +40,10 @@
     .piece:active {
       cursor: grabbing;
     }
+    .piece.active-piece {
+      outline: 3px solid #007bff;
+      z-index: 10;
+    }
     #controls {
       position: absolute;
       top: 10px;
@@ -59,7 +63,7 @@
     }
     #fixed-example {
       position: absolute;
-      bottom: 10px;
+      bottom: 80px;
       left: 10px;
       width: 150px;
       opacity: 0.7;
@@ -122,6 +126,9 @@
 
       function onPointerDown(e) {
         activeShape = el;
+        document.querySelectorAll('.piece').forEach(p => p.classList.remove('active-piece'));
+        el.classList.add('active-piece');
+
         e.preventDefault();
         const rect = el.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
@@ -146,13 +153,11 @@
       el.addEventListener('pointerdown', onPointerDown);
 
       let lastAngle = 0;
-      let rotating = false;
 
       el.addEventListener('pointerdown', (e) => {
         if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
         activeShape = el;
         lastAngle = null;
-        rotating = true;
 
         function onMove(ev) {
           const rect = el.getBoundingClientRect();
@@ -172,7 +177,6 @@
         }
 
         function onUp() {
-          rotating = false;
           document.removeEventListener('pointermove', onMove);
           document.removeEventListener('pointerup', onUp);
         }
