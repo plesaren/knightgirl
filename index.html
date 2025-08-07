@@ -175,38 +175,7 @@ el.classList.add('lifted');
 
       el.addEventListener('pointerdown', onPointerDown);
 
-      let lastAngle = 0;
-
-      el.addEventListener('pointerdown', (e) => {
-        if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
-        activeShape = el;
-        lastAngle = null;
-
-        function onMove(ev) {
-          const rect = el.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          const dx = ev.clientX - centerX;
-          const dy = ev.clientY - centerY;
-          const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-
-          if (lastAngle !== null) {
-            const delta = angle - lastAngle;
-            const state = stateMap.get(el);
-            state.rotation += delta;
-            applyTransform(el);
-          }
-          lastAngle = angle;
-        }
-
-        function onUp() {
-          document.removeEventListener('pointermove', onMove);
-          document.removeEventListener('pointerup', onUp);
-        }
-
-        document.addEventListener('pointermove', onMove);
-        document.addEventListener('pointerup', onUp);
-      });
+      );
     }
 
     function applyTransform(el) {
